@@ -2,16 +2,17 @@ package Sven
 
 import akka.actor.Actor
 
-case object getState
+case object getEvents
 
-case class newState(state: String)
-case class State(state: String)
+case class newEvent(event: Event)
+case class Event(name: String, payload: String)
 
-class Greeter extends Actor {
+class TestActor extends Actor {
+  var events: List[Event] = List()
   var state = ""
 
   def receive = {
-    case newState(x) => state = x
-    case getState           => sender ! State(state) // Send the current greeting back to the sender
+    case newEvent(x) => events = x :: events
+    case getEvents => sender ! events // Send the current greeting back to the sender
   }
 }
