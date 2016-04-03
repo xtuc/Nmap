@@ -11,7 +11,7 @@ import scala.concurrent.duration._
 /**
   * Created by Sven on 02/04/2016.
   */
-case class WebService(inbox: Inbox, greeter: ActorRef) {
+case class WebService(inbox: Inbox, greeter: ActorRef, persistentActor: ActorRef) {
 
   def fooRoute = {
     inbox.send(greeter, getEvents) // Ask for state
@@ -32,6 +32,13 @@ case class WebService(inbox: Inbox, greeter: ActorRef) {
     complete(username)
   }
 
+  def persistentActorFooRoute = {
+    val command = Cmd((new Date).toString)
+    persistentActor.tell(command, ActorRef.noSender)
+
+    complete(command.toString)
+  }
+
   def routes = {
     logRequestResult(("Web server", akka.event.Logging.InfoLevel)) {
       path("state") {
@@ -50,6 +57,13 @@ case class WebService(inbox: Inbox, greeter: ActorRef) {
             formFields("password") { password =>
               loginRoute(username, password)
             }
+          }
+        }
+      } ~
+      pathPrefix("persistent") {
+        path("test") {
+          get {
+            persistentActorFooRoute
           }
         }
       }

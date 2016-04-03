@@ -12,6 +12,7 @@ object Boot extends App {
   implicit val materializer = ActorMaterializer()
 
   val testActor = system.actorOf(Props[TestActor], "test")
+  val ExamplePersistentActor = system.actorOf(Props[ExamplePersistentActor], "PeristentActor")
 
   // Create an "actor-in-a-box"
   val inbox = Inbox.create(system)
@@ -19,7 +20,7 @@ object Boot extends App {
   val host = "0.0.0.0"
   val port = 8080
 
-  val WebService = new WebService(inbox, testActor)
+  val WebService = new WebService(inbox, testActor, ExamplePersistentActor)
 
   // create a new HttpServer using our handler and tell it where to bind to
   Http() bindAndHandle(WebService.routes, host, port)
