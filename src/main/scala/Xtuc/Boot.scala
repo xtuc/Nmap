@@ -1,19 +1,20 @@
-package Sven
+package Xtuc
 
 import java.util.concurrent.CountDownLatch
 
 import akka.actor.{ActorRef, Props, ActorSystem}
 import akka.util.Timeout
+import org.apache.commons.net.util.SubnetUtils
 import scala.collection.immutable.{SortedMap}
 import scala.concurrent.{ExecutionContextExecutor}
 import scala.concurrent.duration._
 import scala.util.Success
 import akka.pattern.ask
 
-case class Ping(ipv4: String, port: Int) extends Ordered[Ping] {
+case class Ping(ipv4: String, port: Int, timeout: Int = 50) extends Ordered[Ping] {
 
   def compare(that: Ping): Int = that match {
-    case Ping(h, p) =>
+    case Ping(h, p, _) =>
       if(ipv4.length > h.length) 1
       else
         if (port > p) 1
@@ -37,14 +38,15 @@ trait Utils {
   val SPACE = 30
 
   def show(x: (Ping, Option[Boolean])) = x match {
-    case (Ping(ip, port), Some(_)) => padRight(ip + ":" + port, SPACE) + OPEN
-    case (Ping(ip, port), None) => padRight(ip + ":" + port, SPACE) + CLOSED
+    case (Ping(ip, port, _), Some(_)) => padRight(ip + ":" + port, SPACE) + OPEN
+    case (Ping(ip, port, _), None) => padRight(ip + ":" + port, SPACE) + CLOSED
   }
 
   def showTable(l: List[String]): Unit = padRight("PORT", SPACE) + "STATE" :: l foreach println
 }
 
 object Boot extends App with Utils {
+  println("args", args mkString ", ")
 
   val system = ActorSystem("default-sys")
   implicit val dispatcher: ExecutionContextExecutor = system.dispatcher
@@ -52,8 +54,12 @@ object Boot extends App with Utils {
   val ping = system.actorOf(Props[PingSenderActor], "default-ping-sender")
   val resultsCache: ActorRef = system.actorOf(Props[ResultsCacheActor], "results-cache")
 
-  val portRange = 20 to 3310
-  val hosts = List("al01", "192.168.1.190")
+  val portRange = 21 to 80
+
+  val utils = new SubnetUtils("192.168.1.0/24")
+  val hosts = utils.getInfo.getAllAddresses
+
+  println(s"${hosts.length} hosts to ping")
 
   Lock.lock = new CountDownLatch(portRange.length * hosts.length)
 
@@ -71,8 +77,6 @@ object Boot extends App with Utils {
       system.terminate()
     case Success(None) => println("No results")
   }
-
-  println(args mkString ", ")
 }
 
 object Lock {

@@ -1,4 +1,4 @@
-name := "Sven"
+name := "Xtuc"
 
 version := "1.0"
 
@@ -9,6 +9,7 @@ lazy val akkaVersion = "2.4.3"
 resolvers += "Akka Snapshot Repository" at "http://repo.akka.io/snapshots/"
 
 libraryDependencies ++= Seq(
+  "commons-net" % "commons-net" % "3.3",
   "com.typesafe.akka" %% "akka-actor" % akkaVersion,
   "com.typesafe.akka" %% "akka-testkit" % akkaVersion,
   "com.typesafe.akka" %% "akka-persistence" % akkaVersion,
