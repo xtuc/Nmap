@@ -14,7 +14,5 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-persistence" % akkaVersion,
   "com.typesafe.akka" %% "akka-http-experimental" % akkaVersion,
   "com.typesafe.akka" %% "akka-http-spray-json-experimental" % akkaVersion,
-  "org.scalatest" %% "scalatest" % "2.2.4" % "test",
-  "org.iq80.leveldb" %% "leveldb" % "0.7",
-  "org.fusesource.leveldbjni" %% "leveldbjni-all" % "1.8"
+  "org.scalatest" %% "scalatest" % "2.2.4" % "test"
 )
