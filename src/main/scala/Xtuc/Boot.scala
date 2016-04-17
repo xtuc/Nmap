@@ -47,16 +47,17 @@ trait Utils {
 object Boot extends App with Utils {
   println("args", args mkString ", ")
 
+  var inputAddress = "localhost"
+  val portRange = 21 to 10000
+
   val system = ActorSystem("default-sys")
   implicit val dispatcher: ExecutionContextExecutor = system.dispatcher
 
   val ping = system.actorOf(Props[PingSenderActor], "default-ping-sender")
   val resultsCache: ActorRef = system.actorOf(Props[ResultsCacheActor], "results-cache")
 
-  val portRange = 21 to 80
-
-  val utils = new SubnetUtils("192.168.1.0/24")
-  val hosts = utils.getInfo.getAllAddresses
+  val hosts: List[String] = if (inputAddress.contains("/")) new SubnetUtils(inputAddress).getInfo.getAllAddresses.toList
+                            else List(inputAddress)
 
   println(s"${hosts.length} hosts to ping")
 
