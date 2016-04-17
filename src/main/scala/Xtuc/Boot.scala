@@ -1,7 +1,6 @@
 package Xtuc
 
 import java.util.concurrent.CountDownLatch
-
 import akka.actor.{ActorRef, Props, ActorSystem}
 import akka.util.Timeout
 import org.apache.commons.net.util.SubnetUtils
@@ -61,7 +60,7 @@ object Boot extends App with Utils {
 
   println(s"${hosts.length} hosts to ping")
 
-  Lock.lock = new CountDownLatch(portRange.length * hosts.length)
+  Lock.lock = Some(new CountDownLatch(portRange.length * hosts.length))
 
   hosts.foreach(h =>
     portRange.foreach(p => {
@@ -69,16 +68,16 @@ object Boot extends App with Utils {
     })
   )
 
-  Lock.lock.await()
+  Lock.lock.map(_.await)
 
   resultsCache ? GetResults onComplete {
     case Success(Some(x: SortedMap[Ping, Option[Boolean]])) =>
       showTable(x.filter(_._2.isDefined).map(show).toList)
       system.terminate()
-    case Success(None) => println("No results")
+    case _ => println("No results")
   }
 }
 
 object Lock {
-  var lock: CountDownLatch = null
+  var lock: Option[CountDownLatch] = None
 }

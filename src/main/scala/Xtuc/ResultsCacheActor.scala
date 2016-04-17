@@ -16,8 +16,8 @@ class ResultsCacheActor extends Actor with Utils {
   def cacheResult(op: Ping, result: Option[Boolean]) = {
     cache = cache.map(_.updated(op, result))
 
-    Lock.lock.synchronized {
-      Lock.lock.countDown()
+    Lock.synchronized {
+      Lock.lock.map(_.countDown)
     }
   }
 }
