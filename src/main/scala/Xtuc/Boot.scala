@@ -48,7 +48,7 @@ object Boot extends App with Utils {
   println("args", args mkString ", ")
 
   var inputAddress = "localhost"
-  val portRange = 21 to 10000
+  val portRange = 631 to 631
 
   val system = ActorSystem("default-sys")
   implicit val dispatcher: ExecutionContextExecutor = system.dispatcher
@@ -64,9 +64,7 @@ object Boot extends App with Utils {
   Lock.lock = Some(new CountDownLatch(portRange.length * hosts.length))
 
   hosts.foreach(h =>
-    portRange.foreach(p => {
-      ping ! (Ping(h, p), resultsCache)
-    })
+    portRange.foreach(p => ping ! (Ping(h, p), resultsCache))
   )
 
   Lock.lock.map(_.await)

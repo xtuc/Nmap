@@ -25,8 +25,9 @@ class PingSenderActor extends Actor with Utils {
     }
 
     f onComplete {
-      case Success(x) => cache ! CacheResult[Boolean](Ping(ip, port), Some(x))
-      case Failure(ex) => cache ! CacheResult[Boolean](Ping(ip, port), None)
+      case x =>
+        Lock.synchronized(Lock.lock.map(_.countDown))
+        cache ! CacheResult[Boolean](Ping(ip, port), x toOption)
     }
   }
 }
