@@ -1,11 +1,12 @@
-package Xtuc
+package xtuc.ping
 
 import java.net.{InetSocketAddress, Socket}
 
-import akka.actor.{ActorRef, Actor}
-import akka.util.Timeout
+import akka.actor.{Actor, ActorRef}
+import xtuc.Utils
+import xtuc.cache.CacheResult
+
 import scala.concurrent.Future
-import scala.util.{Failure, Success}
 
 class PingSenderActor extends Actor with Utils {
   implicit val ec = context.dispatcher

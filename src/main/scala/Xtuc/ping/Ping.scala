@@ -1,4 +1,4 @@
-package Xtuc
+package xtuc.ping
 
 import akka.actor.ActorRef
 

@@ -1,37 +1,16 @@
-package Xtuc
+package xtuc
 
 import java.util.concurrent.CountDownLatch
+import xtuc.cache.{GetResults, ResultsCacheActor}
 import akka.actor.{ActorRef, Props, ActorSystem}
-import akka.util.Timeout
 import org.apache.commons.net.util.SubnetUtils
+import xtuc.ping.{PingSenderActor, Ping}
 import scala.collection.immutable.SortedMap
 import scala.concurrent.ExecutionContextExecutor
-import scala.concurrent.duration._
 import scala.util.Success
 import akka.pattern.ask
 
-case class CacheResult[A](op: Ping, r: Option[A])
-object GetResults
-
-trait Utils {
-  implicit val timeout = Timeout(30 seconds)
-
-  def padRight(s: String, n: Int) = String.format("%1$-" + n + "s", s)
-  def padLeft(s: String, n: Int) = String.format("%1$" + n + "s", s)
-
-  val OPEN = Console.BLUE + "Open" + Console.RESET
-  val CLOSED = Console.RED + "Closed" + Console.RESET
-  val SPACE = 30
-
-  def show(x: (Ping, Option[Boolean])) = x match {
-    case (Ping(ip, port, _), Some(_)) => padRight(ip + ":" + port, SPACE) + OPEN
-    case (Ping(ip, port, _), None) => padRight(ip + ":" + port, SPACE) + CLOSED
-  }
-
-  def showTable(l: List[String]): Unit = padRight("PORT", SPACE) + "STATE" :: l foreach println
-}
-
-object Boot extends App with Utils {
+object Boot extends App with Utils with AppLock {
   val inputAddress = args(0)
   val ports: List[Int] = if(args(2).isEmpty) args(1).toInt to args(2).toInt toList
                          else List(args(1).toInt)
@@ -50,10 +29,10 @@ object Boot extends App with Utils {
   Lock.lock = Some(new CountDownLatch(ports.length * hosts.length))
 
   hosts.foreach(h => {
-    ports.foreach(p => ping ! (Ping(h, p), resultsCache, () => Lock.synchronized(Lock.lock.map(_.countDown))))
+    ports.foreach(p => ping ! (Ping(h, p), resultsCache, () => lockCountDown))
   })
 
-  Lock.lock.map(_.await)
+  lockAwait
 
   resultsCache ? GetResults onComplete {
     case Success(Some(x: SortedMap[Ping, Option[Boolean]])) =>
@@ -61,8 +40,4 @@ object Boot extends App with Utils {
       system.terminate()
     case _ => println("No results")
   }
-}
-
-object Lock {
-  var lock: Option[CountDownLatch] = None
 }

@@ -1,4 +1,4 @@
-name := "Xtuc"
+name := "xtuc"
 
 version := "1.0"
 

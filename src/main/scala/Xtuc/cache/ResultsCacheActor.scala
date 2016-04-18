@@ -1,7 +1,9 @@
-package Xtuc
+package xtuc
+package cache
 
 import akka.actor.Actor
 import akka.pattern.ask
+import xtuc.ping.Ping
 
 import scala.collection.immutable.SortedMap
 
