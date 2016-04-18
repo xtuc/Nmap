@@ -33,7 +33,8 @@ trait Utils {
 
 object Boot extends App with Utils {
   val inputAddress = args(0)
-  val ports = args(1).toInt to args(2).toInt
+  val ports: List[Int] = if(args(2).isEmpty) args(1).toInt to args(2).toInt toList
+                         else List(args(1).toInt)
 
   val system = ActorSystem("default-sys")
   implicit val dispatcher: ExecutionContextExecutor = system.dispatcher
@@ -49,7 +50,7 @@ object Boot extends App with Utils {
   Lock.lock = Some(new CountDownLatch(ports.length * hosts.length))
 
   hosts.foreach(h => {
-    ports.foreach(p => ping ! (Ping(h, p), resultsCache))
+    ports.foreach(p => ping ! (Ping(h, p), resultsCache, () => Lock.synchronized(Lock.lock.map(_.countDown))))
   })
 
   Lock.lock.map(_.await)

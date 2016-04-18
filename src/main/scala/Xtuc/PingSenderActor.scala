@@ -11,11 +11,10 @@ class PingSenderActor extends Actor with Utils {
   implicit val ec = context.dispatcher
 
   def receive = {
-    case (Ping(ip, port, timeout), cache: ActorRef) => ping(ip, port, cache)(timeout)
+    case (Ping(ip, port, timeout), cache: ActorRef, onResult: (() => Unit)) => ping(ip, port, cache, onResult)(timeout)
   }
 
-  def ping(ip: String, port: Int, cache: ActorRef)(timeout: Int): Unit = {
-//    println(Console.BLUE + " ping " + ip + ":" + port + Console.RESET)
+  def ping(ip: String, port: Int, cache: ActorRef, onResult: () => Unit)(timeout: Int): Unit = {
 
     val f: Future[Boolean] = Future {
       val socket = new Socket()
@@ -26,7 +25,7 @@ class PingSenderActor extends Actor with Utils {
 
     f onComplete {
       case x =>
-        Lock.synchronized(Lock.lock.map(_.countDown))
+        onResult()
         cache ! CacheResult[Boolean](Ping(ip, port), x toOption)
     }
   }
