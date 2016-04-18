@@ -17,7 +17,9 @@ trait Utils {
   def show(x: (Ping, Option[Boolean])) = x match {
     case (Ping(ip, port, _), Some(_)) => padRight(ip + ":" + port, SPACE) + OPEN
     case (Ping(ip, port, _), None) => padRight(ip + ":" + port, SPACE) + CLOSED
+    case _ => ""
   }
 
-  def showTable(l: List[String]): Unit = padRight("PORT", SPACE) + "STATE" :: l foreach println
+  def genTable(l: List[String]): List[String] = padRight("PORT", SPACE) + "STATE" :: l
+  def genHeader(hostsToPing: Int, portsToPing: Int) = s"${hostsToPing} host(s) to ping (${portsToPing} port(s))"
 }
