@@ -4,25 +4,12 @@ import java.util.concurrent.CountDownLatch
 import akka.actor.{ActorRef, Props, ActorSystem}
 import akka.util.Timeout
 import org.apache.commons.net.util.SubnetUtils
-import scala.collection.immutable.{SortedMap}
-import scala.concurrent.{ExecutionContextExecutor}
+import scala.collection.immutable.SortedMap
+import scala.concurrent.ExecutionContextExecutor
 import scala.concurrent.duration._
 import scala.util.Success
 import akka.pattern.ask
 
-case class Ping(ipv4: String, port: Int, timeout: Int = 50) extends Ordered[Ping] {
-
-  def compare(that: Ping): Int = that match {
-    case Ping(h, p, _) =>
-      if(ipv4.length > h.length) 1
-      else
-        if (port > p) 1
-        else -1
-    case _ => 0
-  }
-}
-
-case class MakePing(address: String, portFrom: Int, portTo: Int, PingSender: ActorRef, cache: ActorRef)
 case class CacheResult[A](op: Ping, r: Option[A])
 object GetResults
 
@@ -45,10 +32,8 @@ trait Utils {
 }
 
 object Boot extends App with Utils {
-  println("args", args mkString ", ")
-
-  var inputAddress = "localhost"
-  val portRange = 631 to 631
+  val inputAddress = args(0)
+  val ports = args(1).toInt to args(2).toInt
 
   val system = ActorSystem("default-sys")
   implicit val dispatcher: ExecutionContextExecutor = system.dispatcher
@@ -59,13 +44,13 @@ object Boot extends App with Utils {
   val hosts: List[String] = if (inputAddress.contains("/")) new SubnetUtils(inputAddress).getInfo.getAllAddresses.toList
                             else List(inputAddress)
 
-  println(s"${hosts.length} hosts to ping")
+  println(s"${hosts.length} host(s) to ping (${ports.length} port(s))")
 
-  Lock.lock = Some(new CountDownLatch(portRange.length * hosts.length))
+  Lock.lock = Some(new CountDownLatch(ports.length * hosts.length))
 
-  hosts.foreach(h =>
-    portRange.foreach(p => ping ! (Ping(h, p), resultsCache))
-  )
+  hosts.foreach(h => {
+    ports.foreach(p => ping ! (Ping(h, p), resultsCache))
+  })
 
   Lock.lock.map(_.await)
 
