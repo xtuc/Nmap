@@ -9,13 +9,13 @@ import scala.concurrent.ExecutionContextExecutor
 import scala.util.Success
 import akka.pattern.ask
 
-object Boot extends App with Utils with AppLock {
+object App extends App with Utils with AppLock {
   val rawAddress = args(0)
 
   val hosts: List[String] = if (rawAddress.contains("/")) new SubnetUtils(rawAddress).getInfo.getAllAddresses.toList
                             else List(rawAddress)
 
-  val ports: List[Int] = if(args(2).isEmpty) args(1).toInt to args(2).toInt toList
+  val ports: List[Int] = if(args.length > 2) args(1).toInt to args(2).toInt toList
                          else List(args(1).toInt)
 
   val system = ActorSystem("default-sys")
